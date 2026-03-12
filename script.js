@@ -4,58 +4,78 @@ const ctx = canvas.getContext("2d")
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
 
-let gameRunning = false
-let score = 0
-let gameOver = false
-let speed = 3
+let gameRunning=false
+let score=0
+let highScore=0
+let speed=3
 
-const player = {
+let stars=[]
+let asteroids=[]
+let particles=[]
+
+const player={
 x:canvas.width/2,
 y:canvas.height-120,
-width:50,
-height:50,
+size:25,
 speed:7
 }
 
-let meteors=[]
-let stars=[]
-let particles=[]
+let keys={}
 
 function startGame(){
 document.getElementById("menu").style.display="none"
+resetGame()
 gameRunning=true
 update()
 }
 
-function spawnMeteor(){
-
-meteors.push({
-x:Math.random()*canvas.width,
-y:-50,
-size:40+Math.random()*30
-})
-
+function restartGame(){
+document.getElementById("gameOver").style.display="none"
+resetGame()
+gameRunning=true
+update()
 }
 
-function spawnStar(){
+function resetGame(){
+score=0
+speed=3
+asteroids=[]
+particles=[]
+player.x=canvas.width/2
+player.y=canvas.height-120
+}
 
+function createStars(){
+for(let i=0;i<120;i++){
 stars.push({
 x:Math.random()*canvas.width,
-y:-20,
-size:12
+y:Math.random()*canvas.height,
+size:Math.random()*2
+})
+}
+}
+
+createStars()
+
+function spawnAsteroid(){
+
+asteroids.push({
+x:Math.random()*canvas.width,
+y:-40,
+size:30+Math.random()*30
 })
 
 }
 
-function createParticles(x,y){
+function explode(x,y){
 
-for(let i=0;i<10;i++){
+for(let i=0;i<20;i++){
 particles.push({
 x:x,
 y:y,
-vx:Math.random()*4-2,
-vy:Math.random()*4-2,
-life:30
+vx:Math.random()*6-3,
+vy:Math.random()*6-3,
+life:40
 })
 }
 
@@ -66,52 +86,30 @@ function updatePlayer(){
 if(keys["ArrowLeft"]) player.x-=player.speed
 if(keys["ArrowRight"]) player.x+=player.speed
 
-if(player.x<0) player.x=0
-if(player.x+player.width>canvas.width) player.x=canvas.width-player.width
+if(player.x<20) player.x=20
+if(player.x>canvas.width-20) player.x=canvas.width-20
 
 }
 
-function updateMeteors(){
+function updateAsteroids(){
 
-meteors.forEach(m=>{
-m.y+=speed
+asteroids.forEach(a=>{
+
+a.y+=speed
 
 if(
-player.x < m.x+m.size &&
-player.x+player.width > m.x &&
-player.y < m.y+m.size &&
-player.y+player.height > m.y
+player.x < a.x+a.size &&
+player.x > a.x-a.size &&
+player.y < a.y+a.size &&
+player.y > a.y-a.size
 ){
-gameOver=true
-createParticles(player.x,player.y)
+explode(player.x,player.y)
+endGame()
 }
 
 })
 
-meteors=meteors.filter(m=>m.y<canvas.height+50)
-
-}
-
-function updateStars(){
-
-stars.forEach(s=>{
-
-s.y+=speed
-
-if(
-player.x < s.x+s.size &&
-player.x+player.width > s.x &&
-player.y < s.y+s.size &&
-player.y+player.height > s.y
-){
-score+=100
-s.collected=true
-createParticles(s.x,s.y)
-}
-
-})
-
-stars=stars.filter(s=>!s.collected && s.y<canvas.height)
+asteroids=asteroids.filter(a=>a.y<canvas.height+60)
 
 }
 
@@ -127,40 +125,66 @@ particles=particles.filter(p=>p.life>0)
 
 }
 
-function drawPlayer(){
+function drawStars(){
 
-ctx.fillStyle="#00ffff"
-ctx.fillRect(player.x,player.y,player.width,player.height)
+ctx.fillStyle="white"
 
-}
+stars.forEach(s=>{
 
-function drawMeteors(){
+s.y+=0.3
 
-ctx.fillStyle="orange"
+if(s.y>canvas.height) s.y=0
 
-meteors.forEach(m=>{
-ctx.beginPath()
-ctx.arc(m.x,m.y,m.size,0,Math.PI*2)
-ctx.fill()
+ctx.fillRect(s.x,s.y,s.size,s.size)
+
 })
 
 }
 
-function drawStars(){
+function drawPlayer(){
 
-ctx.fillStyle="yellow"
+ctx.fillStyle="#00ffff"
 
-stars.forEach(s=>{
 ctx.beginPath()
-ctx.arc(s.x,s.y,s.size,0,Math.PI*2)
+ctx.moveTo(player.x,player.y)
+ctx.lineTo(player.x-15,player.y+30)
+ctx.lineTo(player.x+15,player.y+30)
+ctx.closePath()
 ctx.fill()
+
+}
+
+function drawAsteroids(){
+
+ctx.fillStyle="#888"
+
+asteroids.forEach(a=>{
+
+ctx.beginPath()
+
+for(let i=0;i<7;i++){
+
+let angle=(i/7)*Math.PI*2
+let radius=a.size+(Math.random()*6-3)
+
+let x=a.x+Math.cos(angle)*radius
+let y=a.y+Math.sin(angle)*radius
+
+if(i===0) ctx.moveTo(x,y)
+else ctx.lineTo(x,y)
+
+}
+
+ctx.closePath()
+ctx.fill()
+
 })
 
 }
 
 function drawParticles(){
 
-ctx.fillStyle="white"
+ctx.fillStyle="orange"
 
 particles.forEach(p=>{
 ctx.fillRect(p.x,p.y,3,3)
@@ -171,9 +195,20 @@ ctx.fillRect(p.x,p.y,3,3)
 function drawScore(){
 
 ctx.fillStyle="white"
-ctx.font="24px Arial"
-
+ctx.font="22px Arial"
 ctx.fillText("Score: "+score,30,40)
+ctx.fillText("High Score: "+highScore,30,70)
+
+}
+
+function endGame(){
+
+gameRunning=false
+
+if(score>highScore) highScore=score
+
+document.getElementById("finalScore").innerText="Score: "+score
+document.getElementById("gameOver").style.display="block"
 
 }
 
@@ -181,30 +216,18 @@ function update(){
 
 if(!gameRunning) return
 
-if(gameOver){
+ctx.fillStyle="black"
+ctx.fillRect(0,0,canvas.width,canvas.height)
 
-ctx.fillStyle="white"
-ctx.font="50px Arial"
-ctx.fillText("Game Over",canvas.width/2-140,canvas.height/2)
-
-ctx.font="24px Arial"
-ctx.fillText("Refresh to Restart",canvas.width/2-110,canvas.height/2+40)
-
-return
-
-}
-
-ctx.clearRect(0,0,canvas.width,canvas.height)
+drawStars()
 
 updatePlayer()
-updateMeteors()
-updateStars()
+updateAsteroids()
 updateParticles()
 
-drawPlayer()
-drawMeteors()
-drawStars()
+drawAsteroids()
 drawParticles()
+drawPlayer()
 drawScore()
 
 score++
@@ -214,10 +237,7 @@ requestAnimationFrame(update)
 
 }
 
-setInterval(spawnMeteor,900)
-setInterval(spawnStar,2000)
-
-let keys={}
+setInterval(spawnAsteroid,900)
 
 document.addEventListener("keydown",e=>{
 keys[e.key]=true

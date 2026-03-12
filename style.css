@@ -1,8 +1,8 @@
 body{
 margin:0;
 overflow:hidden;
-background:linear-gradient(to bottom,#000010,#000030);
 font-family:Arial;
+background:black;
 color:white;
 text-align:center;
 }
@@ -11,22 +11,31 @@ canvas{
 display:block;
 }
 
-#menu{
+#menu, #gameOver{
 position:absolute;
 top:50%;
 left:50%;
 transform:translate(-50%,-50%);
 }
 
+#gameOver{
+display:none;
+}
+
+h1{
+font-size:48px;
+margin-bottom:10px;
+}
+
 button{
-padding:12px 20px;
+padding:12px 25px;
 font-size:18px;
-background:#00eaff;
 border:none;
 border-radius:6px;
+background:#00eaff;
 cursor:pointer;
 }
 
 button:hover{
-background:#00bcd4;
+background:#00c6d8;
 }

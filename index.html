@@ -9,11 +9,17 @@
 
 <div id="menu">
 <h1>Meteor Dodge</h1>
-<p>Move with Arrow Keys</p>
+<p>Dodge asteroids and survive as long as possible</p>
 <button onclick="startGame()">Start Game</button>
 </div>
 
 <canvas id="gameCanvas"></canvas>
+
+<div id="gameOver">
+<h1>Game Over</h1>
+<p id="finalScore"></p>
+<button onclick="restartGame()">Play Again</button>
+</div>
 
 <script src="script.js"></script>
 
